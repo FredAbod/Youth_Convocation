@@ -1,0 +1,5 @@
+app/admin/page.tsx(4,57): error TS2307: Cannot find module 'lucide-react' or its corresponding type declarations.
+app/page.tsx(13,8): error TS2307: Cannot find module 'lucide-react' or its corresponding type declarations.
+lib/cloudinary.ts(1,34): error TS2307: Cannot find module 'cloudinary' or its corresponding type declarations.
+lib/cloudinary.ts(16,8): error TS7006: Parameter 'error' implicitly has an 'any' type.
+lib/cloudinary.ts(16,15): error TS7006: Parameter 'result' implicitly has an 'any' type.
