@@ -11,6 +11,7 @@ import {
   MapPin,
   Loader2,
 } from "lucide-react";
+import Image from "next/image";
 
 export default function Home() {
   const [formData, setFormData] = useState({
@@ -184,6 +185,7 @@ export default function Home() {
             </div>
 
             <div
+              className="ticket-info-grid"
               style={{
                 display: "grid",
                 gridTemplateColumns: "1fr 1fr",
@@ -239,7 +241,7 @@ export default function Home() {
                 Registration Code
               </p>
               <p
-                className="text-accent-gradient"
+                className="text-accent-gradient ticket-code"
                 style={{
                   fontSize: "2.5rem",
                   fontWeight: 800,
@@ -278,20 +280,13 @@ export default function Home() {
           }}
         >
           <div className="brand">
-            <div
-              style={{
-                width: "36px",
-                height: "36px",
-                borderRadius: "8px",
-                background:
-                  "linear-gradient(135deg, var(--accent) 0%, #ff4d6d 100%)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <span style={{ color: "white", fontSize: "18px" }}>TAC</span>
-            </div>
+            <Image
+              src="/taclogo.jpeg"
+              alt="TAC Logo"
+              width={40}
+              height={40}
+              style={{ borderRadius: "8px", objectFit: "cover" }}
+            />
             <span className="text-gradient">Youth Convocation</span>
           </div>
         </div>
@@ -304,6 +299,7 @@ export default function Home() {
       >
         <div className="container">
           <div
+            className="hero-grid"
             style={{
               display: "grid",
               gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
@@ -329,7 +325,7 @@ export default function Home() {
                 Registration Now Open
               </div>
               <h1
-                className="text-gradient"
+                className="text-gradient hero-title"
                 style={{ fontSize: "4rem", marginBottom: "1.5rem" }}
               >
                 One Fold,
@@ -358,6 +354,7 @@ export default function Home() {
 
               {/* Account Details Box */}
               <div
+                className="account-details-box"
                 style={{
                   marginTop: "3rem",
                   background: "var(--glass-bg)",
@@ -393,6 +390,7 @@ export default function Home() {
                   </p>
                 </div>
                 <div
+                  className="divider"
                   style={{ width: "1px", background: "var(--glass-border)" }}
                 />
                 <div
@@ -492,6 +490,7 @@ export default function Home() {
                 </div>
 
                 <div
+                  className="form-row"
                   style={{
                     display: "grid",
                     gridTemplateColumns: "1fr 1fr",
@@ -528,6 +527,7 @@ export default function Home() {
                 </div>
 
                 <div
+                  className="form-row"
                   style={{
                     display: "grid",
                     gridTemplateColumns: "1fr 1fr",
@@ -651,6 +651,85 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Gallery Section */}
+      <section style={{ padding: "4rem 0", background: "rgba(0,0,0,0.2)" }}>
+        <div className="container">
+          <h2
+            className="text-gradient"
+            style={{
+              fontSize: "1.75rem",
+              textAlign: "center",
+              marginBottom: "2rem",
+            }}
+          >
+            Our Community
+          </h2>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+              gap: "1rem",
+            }}
+          >
+            {[
+              "/WhatsApp Image 2026-03-08 at 9.10.28 PM.jpeg",
+              "/WhatsApp Image 2026-03-08 at 9.10.28 PM (1).jpeg",
+              "/WhatsApp Image 2026-03-08 at 9.10.28 PM (2).jpeg",
+              "/WhatsApp Image 2026-03-08 at 9.10.28 PM (3).jpeg",
+            ].map((src, index) => (
+              <div
+                key={index}
+                style={{
+                  position: "relative",
+                  aspectRatio: "4/3",
+                  borderRadius: "var(--radius-md)",
+                  overflow: "hidden",
+                  border: "1px solid var(--glass-border)",
+                }}
+              >
+                <Image
+                  src={src}
+                  alt={`Community image ${index + 1}`}
+                  fill
+                  style={{ objectFit: "cover" }}
+                  sizes="(max-width: 768px) 100vw, 25vw"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="footer">
+        <div className="container">
+          <div className="footer-content">
+            <div className="footer-logo">
+              <Image
+                src="/tacsublogo.jpeg"
+                alt="TAC Sub Logo"
+                width={50}
+                height={50}
+                style={{ borderRadius: "8px", objectFit: "cover" }}
+              />
+              <span style={{ fontWeight: 600, color: "var(--text-muted)" }}>
+                The Apostolic Church
+              </span>
+            </div>
+            <p className="footer-credit">
+              This app was built by{" "}
+              <a
+                href="https://github.com/FredAbod"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Fredabod Technologies
+              </a>
+            </p>
+          </div>
+        </div>
+      </footer>
 
       <style
         dangerouslySetInnerHTML={{

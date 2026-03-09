@@ -10,6 +10,7 @@ export interface IRegistration extends mongoose.Document {
   paymentBank: string;
   paymentProofUrl: string;
   registrationCode: string;
+  status: "pending" | "approved" | "rejected";
   createdAt: Date;
 }
 
@@ -23,6 +24,7 @@ const RegistrationSchema = new mongoose.Schema<IRegistration>({
   paymentBank: { type: String, required: true },
   paymentProofUrl: { type: String, required: true },
   registrationCode: { type: String, required: true, unique: true },
+  status: { type: String, enum: ["pending", "approved", "rejected"], default: "pending" },
   createdAt: { type: Date, default: Date.now },
 });
 
