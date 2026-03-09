@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import {
   UploadCloud,
   CheckCircle,
@@ -10,8 +10,11 @@ import {
   Building2,
   MapPin,
   Loader2,
+  ImageIcon,
+  Share2,
 } from "lucide-react";
 import Image from "next/image";
+import Cropper, { Area } from "react-easy-crop";
 
 export default function Home() {
   const [formData, setFormData] = useState({
@@ -27,6 +30,17 @@ export default function Home() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [successCode, setSuccessCode] = useState("");
+
+  // Flier states
+  const [userPhoto, setUserPhoto] = useState<string | null>(null);
+  const [generatedFlier, setGeneratedFlier] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  
+  // Cropper states
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
@@ -80,6 +94,152 @@ export default function Home() {
 
   const handlePrint = () => {
     window.print();
+  };
+
+  // Handle user photo upload for flier
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setUserPhoto(event.target?.result as string);
+        setGeneratedFlier(null);
+        // Reset crop states
+        setCrop({ x: 0, y: 0 });
+        setZoom(1);
+        setCroppedAreaPixels(null);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Callback when crop is complete
+  const onCropComplete = useCallback((_croppedArea: Area, croppedAreaPixels: Area) => {
+    setCroppedAreaPixels(croppedAreaPixels);
+  }, []);
+
+  // Helper to create cropped image
+  const getCroppedImg = async (imageSrc: string, pixelCrop: Area): Promise<string> => {
+    const image = new window.Image();
+    image.src = imageSrc;
+    await new Promise((resolve) => { image.onload = resolve; });
+
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("No 2d context");
+
+    canvas.width = pixelCrop.width;
+    canvas.height = pixelCrop.height;
+
+    ctx.drawImage(
+      image,
+      pixelCrop.x,
+      pixelCrop.y,
+      pixelCrop.width,
+      pixelCrop.height,
+      0,
+      0,
+      pixelCrop.width,
+      pixelCrop.height
+    );
+
+    return canvas.toDataURL("image/jpeg");
+  };
+
+  // Generate the flier with user photo
+  const generateFlier = async () => {
+    if (!userPhoto || !canvasRef.current || !croppedAreaPixels) return;
+
+    setIsGenerating(true);
+
+    try {
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      // Load the flier template
+      const template = new window.Image();
+      template.crossOrigin = "anonymous";
+      
+      await new Promise<void>((resolve, reject) => {
+        template.onload = () => resolve();
+        template.onerror = reject;
+        template.src = "/flier-template.png";
+      });
+
+      // Set canvas dimensions to match template
+      canvas.width = template.width;
+      canvas.height = template.height;
+
+      // Get the cropped user photo
+      const croppedImageSrc = await getCroppedImg(userPhoto, croppedAreaPixels);
+      
+      // Load cropped user photo
+      const userImg = new window.Image();
+      userImg.crossOrigin = "anonymous";
+      
+      await new Promise<void>((resolve, reject) => {
+        userImg.onload = () => resolve();
+        userImg.onerror = reject;
+        userImg.src = croppedImageSrc;
+      });
+
+      // Position for the photo frame area - EXACT measurements from template (1432x1354)
+      const frameX = canvas.width * 0.372;  // 533px / 1432px
+      const frameY = canvas.height * 0.46;  // Moved down more
+      const frameWidth = canvas.width * 0.258;  // 370px / 1432px
+      const frameHeight = canvas.height * 0.28; // Reduced height to fit frame
+
+      // First draw the template
+      ctx.drawImage(template, 0, 0);
+
+      // Then draw the cropped user photo in the frame area (it's already cropped to aspect ratio)
+      ctx.drawImage(userImg, frameX, frameY, frameWidth, frameHeight);
+
+      // Generate the final image
+      const dataUrl = canvas.toDataURL("image/png", 1.0);
+      setGeneratedFlier(dataUrl);
+    } catch (err) {
+      console.error("Error generating flier:", err);
+      alert("Failed to generate flier. Please try again.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  // Download the generated flier
+  const downloadFlier = () => {
+    if (!generatedFlier) return;
+    const link = document.createElement("a");
+    link.download = `TAC-Youth-Convocation-${formData.name.replace(/\s+/g, "-")}.png`;
+    link.href = generatedFlier;
+    link.click();
+  };
+
+  // Share the flier (if Web Share API is available)
+  const shareFlier = async () => {
+    if (!generatedFlier) return;
+
+    try {
+      // Convert base64 to blob
+      const response = await fetch(generatedFlier);
+      const blob = await response.blob();
+      const file = new File([blob], "TAC-Youth-Convocation-Flier.png", { type: "image/png" });
+
+      if (navigator.share && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          title: "I Will Be Attending - TAC Youth Convocation",
+          text: "Join me at the Easter Youth Convocation 2026!",
+          files: [file],
+        });
+      } else {
+        // Fallback - just download
+        downloadFlier();
+      }
+    } catch (err) {
+      console.error("Error sharing:", err);
+      downloadFlier(); // Fallback to download
+    }
   };
 
   if (successCode) {
@@ -262,6 +422,226 @@ export default function Home() {
             <Download size={20} />
             Save Ticket as PDF
           </button>
+
+          {/* Flier Generator Section */}
+          <div
+            className="no-print"
+            style={{
+              marginTop: "2.5rem",
+              paddingTop: "2.5rem",
+              borderTop: "1px solid var(--glass-border)",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "0.5rem",
+                marginBottom: "1rem",
+              }}
+            >
+              <ImageIcon size={24} color="var(--accent)" />
+              <h2 style={{ fontSize: "1.5rem", margin: 0 }}>
+                Get Your &quot;I Will Be Attending&quot; Flier
+              </h2>
+            </div>
+            <p
+              style={{
+                color: "var(--text-muted)",
+                fontSize: "0.9rem",
+                marginBottom: "1.5rem",
+              }}
+            >
+              Upload your photo to create a personalized flier and share it on social media!
+            </p>
+
+            {/* Photo Upload */}
+            <div className="file-upload-wrapper" style={{ marginBottom: "1.5rem" }}>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoUpload}
+                className="file-upload-input"
+              />
+              <div className="file-upload-content">
+                <UploadCloud size={32} className="file-upload-icon" />
+                <span
+                  style={{
+                    fontWeight: 500,
+                    color: userPhoto ? "white" : "var(--text-muted)",
+                  }}
+                >
+                  {userPhoto ? "Photo uploaded! Click to change" : "Click or drag your photo here"}
+                </span>
+              </div>
+            </div>
+
+            {/* Photo Cropper - Instagram-style drag & zoom */}
+            {userPhoto && !generatedFlier && (
+              <div style={{ marginBottom: "1.5rem" }}>
+                <p
+                  style={{
+                    color: "var(--text-muted)",
+                    fontSize: "0.85rem",
+                    marginBottom: "0.75rem",
+                    textAlign: "center",
+                  }}
+                >
+                  Drag to reposition • Scroll or pinch to zoom
+                </p>
+                <div
+                  style={{
+                    position: "relative",
+                    width: "100%",
+                    height: "300px",
+                    borderRadius: "12px",
+                    overflow: "hidden",
+                    border: "2px solid var(--glass-border)",
+                    background: "rgba(0,0,0,0.3)",
+                  }}
+                >
+                  <Cropper
+                    image={userPhoto}
+                    crop={crop}
+                    zoom={zoom}
+                    aspect={370 / 460} // Portrait frame ratio (width/height)
+                    onCropChange={setCrop}
+                    onZoomChange={setZoom}
+                    onCropComplete={onCropComplete}
+                    showGrid={false}
+                    style={{
+                      containerStyle: { borderRadius: "12px" },
+                      cropAreaStyle: { border: "3px solid var(--accent)" },
+                    }}
+                  />
+                </div>
+                
+                {/* Zoom Slider */}
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "1rem",
+                    marginTop: "1rem",
+                    padding: "0 0.5rem",
+                  }}
+                >
+                  <span style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>Zoom</span>
+                  <input
+                    type="range"
+                    min={1}
+                    max={3}
+                    step={0.1}
+                    value={zoom}
+                    onChange={(e) => setZoom(Number(e.target.value))}
+                    style={{
+                      flex: 1,
+                      accentColor: "var(--accent)",
+                      cursor: "pointer",
+                    }}
+                  />
+                  <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", minWidth: "40px" }}>
+                    {Math.round(zoom * 100)}%
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Generate Button */}
+            {userPhoto && !generatedFlier && (
+              <button
+                onClick={generateFlier}
+                className="btn btn-primary"
+                style={{ width: "100%", padding: "1rem" }}
+                disabled={isGenerating || !croppedAreaPixels}
+              >
+                {isGenerating ? (
+                  <>
+                    <Loader2
+                      size={20}
+                      style={{ animation: "spin 1s linear infinite" }}
+                    />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <ImageIcon size={20} />
+                    Generate My Flier
+                  </>
+                )}
+              </button>
+            )}
+
+            {/* Generated Flier Preview */}
+            {generatedFlier && (
+              <div>
+                <div
+                  style={{
+                    marginBottom: "1.5rem",
+                    borderRadius: "12px",
+                    overflow: "hidden",
+                    border: "2px solid var(--accent)",
+                  }}
+                >
+                  <img
+                    src={generatedFlier}
+                    alt="Your personalized flier"
+                    style={{ width: "100%", height: "auto", display: "block" }}
+                  />
+                </div>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: "1rem",
+                  }}
+                >
+                  <button
+                    onClick={downloadFlier}
+                    className="btn btn-primary"
+                    style={{ padding: "1rem" }}
+                  >
+                    <Download size={18} />
+                    Download
+                  </button>
+                  <button
+                    onClick={shareFlier}
+                    className="btn btn-secondary"
+                    style={{ padding: "1rem" }}
+                  >
+                    <Share2 size={18} />
+                    Share
+                  </button>
+                </div>
+                <button
+                  onClick={() => {
+                    setGeneratedFlier(null); // Go back to adjustment mode
+                  }}
+                  className="btn btn-secondary"
+                  style={{ width: "100%", marginTop: "1rem", padding: "0.75rem" }}
+                >
+                  Adjust Photo Position
+                </button>
+                <button
+                  onClick={() => {
+                    setUserPhoto(null);
+                    setGeneratedFlier(null);
+                    setCrop({ x: 0, y: 0 });
+                    setZoom(1);
+                    setCroppedAreaPixels(null);
+                  }}
+                  className="btn btn-secondary"
+                  style={{ width: "100%", marginTop: "0.5rem", padding: "0.75rem" }}
+                >
+                  Use Different Photo
+                </button>
+              </div>
+            )}
+
+            {/* Hidden Canvas for image generation */}
+            <canvas ref={canvasRef} style={{ display: "none" }} />
+          </div>
         </div>
       </main>
     );
