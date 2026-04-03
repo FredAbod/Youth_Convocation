@@ -11,6 +11,46 @@ export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  // Stats, search, and filter states
+  const [search, setSearch] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+
+  // Stats
+  const total = registrations.length;
+  const approved = registrations.filter((r) => r.status === "approved").length;
+  const pending = registrations.filter((r) => r.status === "pending").length;
+  const rejected = registrations.filter((r) => r.status === "rejected").length;
+
+  // Filtered registrations
+  const filteredRegistrations = registrations.filter((reg) => {
+    // Search by name, code, phone, email, area, paymentName, paymentBank
+    const q = search.trim().toLowerCase();
+    let match = true;
+    if (q) {
+      match = [
+        reg.name,
+        reg.registrationCode,
+        reg.phone,
+        reg.email,
+        reg.area,
+        reg.paymentName,
+        reg.paymentBank,
+      ].some((field) => (field || "").toLowerCase().includes(q));
+    }
+    // Date filter
+    let dateMatch = true;
+    if (dateFrom) {
+      dateMatch = new Date(reg.createdAt) >= new Date(dateFrom);
+    }
+    if (dateTo && dateMatch) {
+      // Add 1 day to dateTo to make it inclusive
+      const toDate = new Date(dateTo);
+      toDate.setDate(toDate.getDate() + 1);
+      dateMatch = new Date(reg.createdAt) < toDate;
+    }
+    return match && dateMatch;
+  });
 
   const fetchRegistrations = async () => {
     try {
@@ -36,7 +76,6 @@ export default function AdminDashboard() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to update status");
-      
       // Update local state
       setRegistrations((prev) =>
         prev.map((reg) =>
@@ -145,48 +184,102 @@ export default function AdminDashboard() {
         className="container"
         style={{ padding: "4rem 1.5rem", minHeight: "100vh" }}
       >
-        <div
-          className="admin-header"
+        <div className="admin-header"
           style={{
             display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
+            flexDirection: "column",
+            gap: "1.5rem",
             marginBottom: "2rem",
           }}
         >
-          <div>
-            <h1
-              className="text-gradient"
-              style={{
-                fontSize: "2.5rem",
-                marginBottom: "0.5rem",
-                display: "flex",
-                alignItems: "center",
-                gap: "0.75rem",
-              }}
-            >
-              <Image
-                src="/taclogo.jpeg"
-                alt="TAC Logo"
-                width={40}
-                height={40}
-                style={{ borderRadius: "8px", objectFit: "cover" }}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+              <div>
+                <h1
+                  className="text-gradient"
+                  style={{
+                    fontSize: "2.5rem",
+                    marginBottom: "0.5rem",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.75rem",
+                  }}
+                >
+                  <Image
+                    src="/taclogo.jpeg"
+                    alt="TAC Logo"
+                    width={40}
+                    height={40}
+                    style={{ borderRadius: "8px", objectFit: "cover" }}
+                  />
+                  Registrations
+                </h1>
+                <p style={{ color: "var(--text-muted)" }}>
+                  Manage youth convocation attendees and payment proofs
+                </p>
+              </div>
+              <button
+                onClick={fetchRegistrations}
+                className="btn btn-secondary"
+                style={{ padding: "0.5rem 1rem" }}
+              >
+                <RefreshCw size={18} /> Refresh
+              </button>
+            </div>
+            {/* Stats Row */}
+            <div style={{ display: "flex", gap: "2rem", flexWrap: "wrap", justifyContent: "flex-start" }}>
+              <div style={{ background: "rgba(0,0,0,0.08)", borderRadius: 8, padding: "0.75rem 1.5rem", minWidth: 120 }}>
+                <div style={{ fontWeight: 700, fontSize: "1.1rem" }}>Total</div>
+                <div style={{ fontSize: "1.5rem", color: "var(--accent)", fontWeight: 800 }}>{total}</div>
+              </div>
+              <div style={{ background: "rgba(16,185,129,0.08)", borderRadius: 8, padding: "0.75rem 1.5rem", minWidth: 120 }}>
+                <div style={{ fontWeight: 700, fontSize: "1.1rem" }}>Approved</div>
+                <div style={{ fontSize: "1.5rem", color: "#10b981", fontWeight: 800 }}>{approved}</div>
+              </div>
+              <div style={{ background: "rgba(251,191,36,0.08)", borderRadius: 8, padding: "0.75rem 1.5rem", minWidth: 120 }}>
+                <div style={{ fontWeight: 700, fontSize: "1.1rem" }}>Pending</div>
+                <div style={{ fontSize: "1.5rem", color: "#fbbf24", fontWeight: 800 }}>{pending}</div>
+              </div>
+              <div style={{ background: "rgba(239,68,68,0.08)", borderRadius: 8, padding: "0.75rem 1.5rem", minWidth: 120 }}>
+                <div style={{ fontWeight: 700, fontSize: "1.1rem" }}>Rejected</div>
+                <div style={{ fontSize: "1.5rem", color: "#ef4444", fontWeight: 800 }}>{rejected}</div>
+              </div>
+            </div>
+            {/* Search and Filter Row */}
+            <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", alignItems: "center", width: "100%" }}>
+              <input
+                type="text"
+                placeholder="Search by name, registration code, phone, email, area, payment name, bank..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                style={{ flex: 2, minWidth: 220, padding: "0.5rem 1rem", borderRadius: 6, border: "1px solid var(--glass-border)", fontSize: "1rem" }}
               />
-              Registrations
-            </h1>
-            <p style={{ color: "var(--text-muted)" }}>
-              Manage youth convocation attendees and payment proofs
-            </p>
+              <label style={{ fontSize: "0.95rem", color: "var(--text-muted)" }}>
+                From:
+                <input
+                  type="date"
+                  value={dateFrom}
+                  onChange={e => setDateFrom(e.target.value)}
+                  style={{ marginLeft: 4, marginRight: 12, padding: "0.3rem 0.5rem", borderRadius: 6, border: "1px solid var(--glass-border)" }}
+                />
+              </label>
+              <label style={{ fontSize: "0.95rem", color: "var(--text-muted)" }}>
+                To:
+                <input
+                  type="date"
+                  value={dateTo}
+                  onChange={e => setDateTo(e.target.value)}
+                  style={{ marginLeft: 4, padding: "0.3rem 0.5rem", borderRadius: 6, border: "1px solid var(--glass-border)" }}
+                />
+              </label>
+              <button
+                onClick={() => { setSearch(""); setDateFrom(""); setDateTo(""); }}
+                className="btn btn-secondary"
+                style={{ padding: "0.5rem 1rem" }}
+              >
+                Clear Filters
+              </button>
+            </div>
           </div>
-
-          <button
-            onClick={fetchRegistrations}
-            className="btn btn-secondary"
-            style={{ padding: "0.5rem 1rem" }}
-          >
-            <RefreshCw size={18} /> Refresh
-          </button>
-        </div>
 
         <div className="glass-card slide-up admin-table-container" style={{ padding: "1.5rem" }}>
           {isLoading ? (
@@ -215,7 +308,7 @@ export default function AdminDashboard() {
             >
               {error}
             </div>
-          ) : registrations.length === 0 ? (
+          ) : filteredRegistrations.length === 0 ? (
             <div
               style={{
                 textAlign: "center",
@@ -223,7 +316,7 @@ export default function AdminDashboard() {
                 color: "var(--text-muted)",
               }}
             >
-              No registrations yet.
+              No registrations found for the selected filters.
             </div>
           ) : (
             <div style={{ overflowX: "auto" }}>
@@ -253,7 +346,7 @@ export default function AdminDashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {registrations.map((reg: any) => (
+                  {filteredRegistrations.map((reg: any) => (
                     <tr
                       key={reg._id}
                       style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}

@@ -672,12 +672,14 @@ export default function Home() {
         </div>
       </nav>
 
-      {/* Hero Section */}
+      {/* Registration Closed Banner and Hero Section */}
       <section
         style={{ paddingTop: "140px", paddingBottom: "60px" }}
         className="fade-in"
       >
         <div className="container">
+          {/* Registration Closed Banner */}
+          {/* Registration Closed Banner removed as per user request */}
           <div
             className="hero-grid"
             style={{
@@ -689,21 +691,6 @@ export default function Home() {
           >
             {/* Left Content */}
             <div style={{ maxWidth: "600px" }}>
-              <div
-                style={{
-                  display: "inline-block",
-                  padding: "0.5rem 1rem",
-                  background: "rgba(225, 29, 72, 0.1)",
-                  border: "1px solid rgba(225, 29, 72, 0.2)",
-                  borderRadius: "var(--radius-full)",
-                  color: "var(--accent)",
-                  fontWeight: 600,
-                  fontSize: "0.875rem",
-                  marginBottom: "1.5rem",
-                }}
-              >
-                Registration Now Open
-              </div>
               <h1
                 className="text-gradient hero-title"
                 style={{ fontSize: "4rem", marginBottom: "1.5rem" }}
@@ -721,16 +708,8 @@ export default function Home() {
                 }}
               >
                 Join us for a transformative experience at the Apostolic Church
-                Youth Convocation. Secure your spot now and be part of this
-                divine gathering. Let no man despise thy youth.
+                Youth Convocation. Registration is now closed. We look forward to seeing all registered participants!
               </p>
-
-              <div style={{ display: "flex", gap: "1rem" }}>
-                <a href="#register" className="btn btn-primary">
-                  Register Now
-                  <ArrowRight size={18} />
-                </a>
-              </div>
 
               {/* Account Details Box */}
               <div
@@ -805,228 +784,30 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Right Side - Form */}
+            {/* Right Side - Registration Closed Notice (instead of form) */}
             <div
               id="register"
               className="glass-card slide-up"
-              style={{ animationDelay: "0.2s" }}
+              style={{ animationDelay: "0.2s", textAlign: "center", padding: "2.5rem 2rem" }}
             >
-              <h2 style={{ fontSize: "1.75rem", marginBottom: "0.5rem" }}>
-                Secure your participation
+              <h2 style={{ fontSize: "1.75rem", marginBottom: "1.2rem", color: "#ff4d6d" }}>
+                Registration Closed
               </h2>
               <p
                 style={{
                   color: "var(--text-muted)",
-                  fontSize: "0.9rem",
-                  marginBottom: "2rem",
+                  fontSize: "1.05rem",
+                  marginBottom: "1.5rem",
                 }}
               >
-                Fill this form carefully. After completing payment, upload your
-                proof to receive your Registration Code.
+                Registration is now <span style={{ textDecoration: "underline" }}>CLOSED</span>.<br />
+                If you have registered, please come to the camp with your registration code for physical confirmation.<br />
+                New registrations are only possible physically at the camp venue.
               </p>
-
-              {error && (
-                <div
-                  style={{
-                    background: "rgba(225, 29, 72, 0.1)",
-                    border: "1px solid var(--accent)",
-                    color: "#ff4d6d",
-                    padding: "1rem",
-                    borderRadius: "var(--radius-md)",
-                    marginBottom: "1.5rem",
-                    fontSize: "0.9rem",
-                  }}
-                >
-                  {error}
-                </div>
-              )}
-
-              <form onSubmit={handleSubmit}>
-                <h3
-                  style={{
-                    fontSize: "1rem",
-                    color: "var(--accent)",
-                    marginBottom: "1rem",
-                    textTransform: "uppercase",
-                    letterSpacing: "1px",
-                    borderBottom: "1px solid rgba(255,255,255,0.1)",
-                    paddingBottom: "0.5rem",
-                  }}
-                >
-                  Personal Information
-                </h3>
-
-                <div className="form-group">
-                  <label className="form-label">Full Name</label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    className="form-control"
-                    placeholder="John Doe"
-                    required
-                  />
-                </div>
-
-                <div
-                  className="form-row"
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr",
-                    gap: "1rem",
-                    marginBottom: "1.5rem",
-                  }}
-                >
-                  <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label className="form-label">Gender</label>
-                    <select
-                      name="gender"
-                      value={formData.gender}
-                      onChange={handleInputChange}
-                      className="form-control"
-                      required
-                    >
-                      <option value="">Select Gender</option>
-                      <option value="Male">Male</option>
-                      <option value="Female">Female</option>
-                    </select>
-                  </div>
-                  <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label className="form-label">Area</label>
-                    <input
-                      type="text"
-                      name="area"
-                      value={formData.area}
-                      onChange={handleInputChange}
-                      className="form-control"
-                      placeholder="E.g., Abeokuta"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div
-                  className="form-row"
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr",
-                    gap: "1rem",
-                    marginBottom: "2rem",
-                  }}
-                >
-                  <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label className="form-label">Phone Number</label>
-                    <input
-                      type="tel"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleInputChange}
-                      className="form-control"
-                      placeholder="08012345678"
-                      required
-                    />
-                  </div>
-                  <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label className="form-label">Email</label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      className="form-control"
-                      placeholder="john@example.com"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <h3
-                  style={{
-                    fontSize: "1rem",
-                    color: "var(--accent)",
-                    marginBottom: "1rem",
-                    textTransform: "uppercase",
-                    letterSpacing: "1px",
-                    borderBottom: "1px solid rgba(255,255,255,0.1)",
-                    paddingBottom: "0.5rem",
-                  }}
-                >
-                  Payment Confirmation
-                </h3>
-
-                <div className="form-group">
-                  <label className="form-label">Name used for Payment</label>
-                  <input
-                    type="text"
-                    name="paymentName"
-                    value={formData.paymentName}
-                    onChange={handleInputChange}
-                    className="form-control"
-                    placeholder="E.g., John Doe"
-                    required
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Bank used for Payment</label>
-                  <input
-                    type="text"
-                    name="paymentBank"
-                    value={formData.paymentBank}
-                    onChange={handleInputChange}
-                    className="form-control"
-                    placeholder="E.g., GTBank"
-                    required
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">
-                    Upload Evidence of Payment (EOP)
-                  </label>
-                  <div className="file-upload-wrapper">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileChange}
-                      className="file-upload-input"
-                      required
-                    />
-                    <div className="file-upload-content">
-                      <UploadCloud size={32} className="file-upload-icon" />
-                      <span
-                        style={{
-                          fontWeight: 500,
-                          color: file ? "white" : "var(--text-muted)",
-                        }}
-                      >
-                        {file ? file.name : "Click or drag receipt here"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  className="btn btn-primary"
-                  style={{ width: "100%", marginTop: "1rem" }}
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2
-                        size={20}
-                        className="animate-spin"
-                        style={{ animation: "spin 1s linear infinite" }}
-                      />
-                      Processing...
-                    </>
-                  ) : (
-                    "Complete Registration"
-                  )}
-                </button>
-              </form>
+              <div style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>🙏</div>
+              <div style={{ color: "#ff4d6d", fontWeight: 600 }}>
+                Thank you for your interest and support!
+              </div>
             </div>
           </div>
         </div>
